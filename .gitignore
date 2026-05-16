@@ -1,0 +1,17 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.pyc
+__pycache__/
+
+# Files to exclude
+latihan_belajar_capstone_isian.ipynb
+
+# OS
+.DS_Store
+Thumbs.db
