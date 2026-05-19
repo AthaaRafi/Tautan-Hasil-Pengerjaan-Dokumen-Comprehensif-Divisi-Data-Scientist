@@ -75,9 +75,6 @@ def load_pertanyaan_satu():
     root_dir = app_dir.parent
     notebook_path = root_dir / "pertanyaan_satu" / "main.ipynb"
     
-    st.write(f"DEBUG: Resolved notebook path: {notebook_path}")
-    st.write(f"DEBUG: Path exists: {notebook_path.exists()}")
-    
     return load_pertanyaan_satu_from_notebook(str(notebook_path.resolve()))
 
 
@@ -88,9 +85,6 @@ def load_pertanyaan_dua():
     app_dir = Path(__file__).parent
     root_dir = app_dir.parent
     notebook_path = root_dir / "pertanyaan_dua" / "Hasil_Analisis_Pertanyaan_Bisnis_Kedua.ipynb"
-    
-    st.write(f"DEBUG: Resolved notebook path: {notebook_path}")
-    st.write(f"DEBUG: Path exists: {notebook_path.exists()}")
     
     return load_pertanyaan_dua_from_notebook(str(notebook_path.resolve()))
 
