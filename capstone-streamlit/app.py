@@ -300,15 +300,27 @@ def main():
                 
                 # Correlation summary
                 st.markdown("#### Summary Korelasi IPTIK dengan APS")
-                # Gunakan nama kolom yang sebenarnya ada di correlation matrix
-                corr_iptik_avg_row = corr_matrix.loc['IPTIK_avg']
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Korelasi IPTIK vs APS (13-15)", f"{corr_iptik_avg_row['APS_avg_age_13-15']:.3f}")
-                with col2:
-                    st.metric("Korelasi IPTIK vs APS (16-18)", f"{corr_iptik_avg_row['APS_avg_age_16-18']:.3f}")
-                with col3:
-                    st.metric("Korelasi IPTIK vs APS (19-23)", f"{corr_iptik_avg_row['APS_avg_age_19-23']:.3f}")
+                try:
+                    # Gunakan nama kolom yang sebenarnya ada di correlation matrix
+                    if corr_matrix is not None and 'IPTIK_avg' in corr_matrix.index:
+                        corr_iptik_avg_row = corr_matrix.loc['IPTIK_avg']
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Korelasi IPTIK vs APS (13-15)", f"{corr_iptik_avg_row['APS_avg_age_13-15']:.3f}")
+                        with col2:
+                            st.metric("Korelasi IPTIK vs APS (16-18)", f"{corr_iptik_avg_row['APS_avg_age_16-18']:.3f}")
+                        with col3:
+                            st.metric("Korelasi IPTIK vs APS (19-23)", f"{corr_iptik_avg_row['APS_avg_age_19-23']:.3f}")
+                    else:
+                        st.warning("Correlation matrix tidak memiliki IPTIK_avg index")
+                        if corr_matrix is not None:
+                            st.write(f"Index: {corr_matrix.index.tolist()}")
+                except KeyError as e:
+                    st.error(f"KeyError: {e}")
+                    st.write(f"Correlation matrix index: {corr_matrix.index.tolist() if corr_matrix is not None else 'None'}")
+                except Exception as e:
+                    st.error(f"Error accessing correlation data: {e}")
+                    st.write(f"Correlation matrix type: {type(corr_matrix)}")
             
             # TAB 2: Top 10 Rankings
             with tab2:
@@ -318,8 +330,17 @@ def main():
                 
                 with col1:
                     st.markdown("**Top 10 IPTIK Average (2024)**")
-                    # Plot top 10 IPTIK
-                    df_top10_iptik = df_iptik.nlargest(10, 'IPTIK_avg')[['Provinsi', 'IPTIK_avg']].copy()
+                    # Calculate IPTIK average from year columns
+                    df_iptik_calc = df_iptik.copy()
+                    year_cols = [c for c in df_iptik_calc.columns if c not in ['Provinsi', 'Rank']]
+                    if year_cols:
+                        df_iptik_calc['IPTIK_avg'] = df_iptik_calc[year_cols].mean(axis=1)
+                        df_top10_iptik = df_iptik_calc.nlargest(10, 'IPTIK_avg')[['Provinsi', 'IPTIK_avg']].copy()
+                    else:
+                        # If no year columns, use all columns except Provinsi
+                        df_iptik_calc['IPTIK_avg'] = df_iptik_calc[[c for c in df_iptik_calc.columns if c != 'Provinsi']].mean(axis=1)
+                        df_top10_iptik = df_iptik_calc.nlargest(10, 'IPTIK_avg')[['Provinsi', 'IPTIK_avg']].copy()
+                    
                     fig, ax = plt.subplots(figsize=(8, 5))
                     ax.barh(df_top10_iptik['Provinsi'], df_top10_iptik['IPTIK_avg'], color='steelblue')
                     ax.set_xlabel('IPTIK Average')
@@ -357,20 +378,26 @@ def main():
             with tab3:
                 st.markdown("#### Tren Waktu IPTIK per Provinsi (Top 10 by 2024)")
                 
-                # Get top 10 IPTIK provinsi
-                top10_provinsi = df_iptik.nlargest(10, 'IPTIK_avg')['Provinsi'].tolist()
-                df_tren = df_iptik[df_iptik['Provinsi'].isin(top10_provinsi)][['Provinsi', '2019', '2020', '2021', '2022', '2023', '2024']].copy()
+                # Calculate IPTIK average and get top 10
+                df_iptik_calc = df_iptik.copy()
+                year_cols = [c for c in df_iptik_calc.columns if c not in ['Provinsi', 'Rank']]
+                if year_cols:
+                    df_iptik_calc['IPTIK_avg'] = df_iptik_calc[year_cols].mean(axis=1)
+                    top10_provinsi = df_iptik_calc.nlargest(10, 'IPTIK_avg')['Provinsi'].tolist()
+                else:
+                    st.warning("Tidak ada kolom tahun ditemukan")
+                    top10_provinsi = df_iptik['Provinsi'].head(10).tolist()
+                
+                df_tren = df_iptik[df_iptik['Provinsi'].isin(top10_provinsi)][['Provinsi'] + year_cols].copy()
                 
                 fig, ax = plt.subplots(figsize=(12, 6))
                 for provinsi in top10_provinsi:
                     row = df_tren[df_tren['Provinsi'] == provinsi].iloc[0]
-                    ax.plot(['2019', '2020', '2021', '2022', '2023', '2024'], 
-                           [row['2019'], row['2020'], row['2021'], row['2022'], row['2023'], row['2024']], 
-                           marker='o', label=provinsi)
+                    ax.plot(year_cols, [row[col] for col in year_cols], marker='o', label=provinsi)
                 
                 ax.set_xlabel('Tahun')
                 ax.set_ylabel('IPTIK Index')
-                ax.set_title('Tren IPTIK per Provinsi (Top 10, 2019-2024)')
+                ax.set_title(f'Tren IPTIK per Provinsi (Top 10, {min(year_cols)}-{max(year_cols)})')
                 ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=8)
                 ax.grid(True, alpha=0.3)
                 plt.tight_layout()
@@ -408,17 +435,26 @@ def main():
                 
                 # Detail korelasi
                 st.markdown("#### Nilai Korelasi Detail")
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown("**IPTIK Average vs APS Metrics:**")
-                    corr_detail = corr_matrix.loc['IPTIK_avg', ['APS_avg_age_13-15', 'APS_avg_age_16-18', 'APS_avg_age_19-23']]
-                    st.dataframe(corr_detail.to_frame(name='Correlation'))
-                
-                with col2:
-                    st.markdown("**IPTIK Year-by-Year vs APS (16-18):**")
-                    corr_yearly = corr_matrix.loc[['IPTIK_2019', 'IPTIK_2020', 'IPTIK_2021', 'IPTIK_2022', 'IPTIK_2023', 'IPTIK_2024'], 'APS_avg_age_16-18']
-                    st.dataframe(corr_yearly.to_frame(name='Correlation with APS (16-18)'))
+                try:
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("**IPTIK Average vs APS Metrics:**")
+                        if 'IPTIK_avg' in corr_matrix.index:
+                            corr_detail = corr_matrix.loc['IPTIK_avg', ['APS_avg_age_13-15', 'APS_avg_age_16-18', 'APS_avg_age_19-23']]
+                            st.dataframe(corr_detail.to_frame(name='Correlation'))
+                        else:
+                            st.warning("IPTIK_avg tidak ditemukan di correlation matrix index")
+                    
+                    with col2:
+                        st.markdown("**IPTIK Year-by-Year vs APS (16-18):**")
+                        if 'IPTIK_avg' in corr_matrix.index:
+                            year_indices = [idx for idx in corr_matrix.index if idx.startswith('IPTIK_')]
+                            if year_indices:
+                                corr_yearly = corr_matrix.loc[year_indices, 'APS_avg_age_16-18']
+                                st.dataframe(corr_yearly.to_frame(name='Correlation with APS (16-18)'))
+                except Exception as e:
+                    st.error(f"Error displaying correlation details: {e}")
             
             # TAB 5: Scatter Analysis
             with tab5:
@@ -441,7 +477,12 @@ def main():
                                 ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
                             ax.set_xlabel('IPTIK Average')
                             ax.set_ylabel('APS Average (13-15)')
-                            ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_13-15']:.3f}")
+                            try:
+                                if 'IPTIK_avg' in corr_matrix.index and 'APS_avg_age_13-15' in corr_matrix.columns:
+                                    corr_val = corr_matrix.loc['IPTIK_avg', 'APS_avg_age_13-15']
+                                    ax.set_title(f"Correlation: {corr_val:.3f}")
+                            except Exception:
+                                pass
                             ax.legend()
                             ax.grid(True, alpha=0.3)
                             plt.tight_layout()
@@ -461,7 +502,12 @@ def main():
                                 ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
                             ax.set_xlabel('IPTIK Average')
                             ax.set_ylabel('APS Average (16-18)')
-                            ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_16-18']:.3f}")
+                            try:
+                                if 'IPTIK_avg' in corr_matrix.index and 'APS_avg_age_16-18' in corr_matrix.columns:
+                                    corr_val = corr_matrix.loc['IPTIK_avg', 'APS_avg_age_16-18']
+                                    ax.set_title(f"Correlation: {corr_val:.3f}")
+                            except Exception:
+                                pass
                             ax.legend()
                             ax.grid(True, alpha=0.3)
                             plt.tight_layout()
@@ -481,7 +527,12 @@ def main():
                                 ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
                             ax.set_xlabel('IPTIK Average')
                             ax.set_ylabel('APS Average (19-23)')
-                            ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_19-23']:.3f}")
+                            try:
+                                if 'IPTIK_avg' in corr_matrix.index and 'APS_avg_age_19-23' in corr_matrix.columns:
+                                    corr_val = corr_matrix.loc['IPTIK_avg', 'APS_avg_age_19-23']
+                                    ax.set_title(f"Correlation: {corr_val:.3f}")
+                            except Exception:
+                                pass
                             ax.legend()
                             ax.grid(True, alpha=0.3)
                             plt.tight_layout()
