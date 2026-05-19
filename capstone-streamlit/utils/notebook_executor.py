@@ -217,8 +217,8 @@ def load_pertanyaan_dua_from_notebook(notebook_path):
     exec_globals = execute_notebook(notebook_path, data_dir)
     
     # Extract data yang penting
-    df_iptik = exec_globals.get('df_iptik_final')
-    df_aps = exec_globals.get('df_aps_final')
+    df_iptik = exec_globals.get('df_iptik_merged')
+    df_aps = exec_globals.get('df_aps_merged')
     corr_matrix = exec_globals.get('corr_matrix')
     
     if df_iptik is None or df_aps is None or corr_matrix is None:
