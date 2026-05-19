@@ -10,6 +10,9 @@ Author: Capstone Project
 
 import streamlit as st
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 import os
 from pathlib import Path
 
@@ -295,84 +298,111 @@ def main():
                 st.dataframe(df_aps_display.head(10), use_container_width=True)
                 
                 # Correlation summary
-                st.markdown("#### Summary Korelasi")
-                corr_iptik_avg = corr_matrix.loc['IPTIK_avg', ['Peserta_avg', 'Lulusan_avg', 'Gap_avg']]
+                st.markdown("#### Summary Korelasi IPTIK dengan APS")
+                # Gunakan nama kolom yang sebenarnya ada di correlation matrix
+                corr_iptik_avg_row = corr_matrix.loc['IPTIK_avg']
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Korelasi IPTIK vs Peserta", f"{corr_iptik_avg['Peserta_avg']:.3f}")
+                    st.metric("Korelasi IPTIK vs APS (13-15)", f"{corr_iptik_avg_row['APS_avg_age_13-15']:.3f}")
                 with col2:
-                    st.metric("Korelasi IPTIK vs Lulusan", f"{corr_iptik_avg['Lulusan_avg']:.3f}")
+                    st.metric("Korelasi IPTIK vs APS (16-18)", f"{corr_iptik_avg_row['APS_avg_age_16-18']:.3f}")
                 with col3:
-                    st.metric("Korelasi IPTIK vs Gap", f"{corr_iptik_avg['Gap_avg']:.3f}")
+                    st.metric("Korelasi IPTIK vs APS (19-23)", f"{corr_iptik_avg_row['APS_avg_age_19-23']:.3f}")
             
             # TAB 2: Top 10 Rankings
             with tab2:
                 st.markdown("#### Top 10 Rankings Berbagai Metrik")
                 
-                col1, col2, col3 = st.columns(3)
+                col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.markdown("**Top 10 IPTIK Average**")
-                    plt_obj = visualisasi['1_Top10_IPTIK']()
-                    st.pyplot(plt_obj)
+                    st.markdown("**Top 10 IPTIK Average (2024)**")
+                    # Plot top 10 IPTIK
+                    df_top10_iptik = df_iptik.nlargest(10, 'IPTIK_avg')[['Provinsi', 'IPTIK_avg']].copy()
+                    fig, ax = plt.subplots(figsize=(8, 5))
+                    ax.barh(df_top10_iptik['Provinsi'], df_top10_iptik['IPTIK_avg'], color='steelblue')
+                    ax.set_xlabel('IPTIK Average')
+                    ax.invert_yaxis()
+                    plt.tight_layout()
+                    st.pyplot(fig)
                 
                 with col2:
-                    st.markdown("**Top 10 Peserta Rata-rata**")
-                    plt_obj = visualisasi['2_Top10_APS_13-15']()
-                    st.pyplot(plt_obj)
-                
-                with col3:
-                    st.markdown("**Top 10 Lulusan Rata-rata**")
-                    plt_obj = visualisasi['3_Top10_APS_16-18']()
-                    st.pyplot(plt_obj)
-                
-                # Baris kedua
-                col4, col5 = st.columns(2)
-                with col4:
-                    st.markdown("**Top 10 Gap Peserta-Lulusan**")
-                    plt_obj = visualisasi['4_Top10_APS_19-23']()
-                    st.pyplot(plt_obj)
+                    st.markdown("**Top 10 APS (Age 16-18)**")
+                    # Plot top 10 APS 16-18 (secondary education)
+                    # Calculate average across years for age 16-18
+                    if 'APS_avg_1618' in df_aps.columns:
+                        df_top10_aps = df_aps.nlargest(10, 'APS_avg_1618')[['Provinsi', 'APS_avg_1618']].copy()
+                        df_top10_aps = df_top10_aps.rename(columns={'APS_avg_1618': 'APS_Rata2'})
+                    else:
+                        # Kalkulasi dari kolom tahun jika ada
+                        aps_cols = [c for c in df_aps.columns if '16-18' in c or '16_18' in c]
+                        if aps_cols:
+                            df_top10_aps = df_aps.copy()
+                            df_top10_aps['APS_Rata2'] = df_top10_aps[[c for c in df_aps.columns if '16-18' in c or '16_18' in c]].mean(axis=1)
+                            df_top10_aps = df_top10_aps.nlargest(10, 'APS_Rata2')[['Provinsi', 'APS_Rata2']]
+                        else:
+                            st.warning("Kolom APS tidak ditemukan untuk visualisasi")
+                            df_top10_aps = None
+                    
+                    if df_top10_aps is not None:
+                        fig, ax = plt.subplots(figsize=(8, 5))
+                        ax.barh(df_top10_aps['Provinsi'], df_top10_aps['APS_Rata2'], color='coral')
+                        ax.set_xlabel('APS Average (16-18)')
+                        ax.invert_yaxis()
+                        plt.tight_layout()
+                        st.pyplot(fig)
             
             # TAB 3: Tren Waktu
             with tab3:
-                st.markdown("#### Tren Waktu Peserta/Lulusan per Provinsi (Top 10)")
+                st.markdown("#### Tren Waktu IPTIK per Provinsi (Top 10 by 2024)")
                 
-                col1, col2, col3 = st.columns(3)
+                # Get top 10 IPTIK provinsi
+                top10_provinsi = df_iptik.nlargest(10, 'IPTIK_avg')['Provinsi'].tolist()
+                df_tren = df_iptik[df_iptik['Provinsi'].isin(top10_provinsi)][['Provinsi', '2019', '2020', '2021', '2022', '2023', '2024']].copy()
                 
-                with col1:
-                    st.markdown("**Tren Peserta (2020-2025)**")
-                    plt_obj = visualisasi['5_Tren_APS_13-15']()
-                    st.pyplot(plt_obj)
+                fig, ax = plt.subplots(figsize=(12, 6))
+                for provinsi in top10_provinsi:
+                    row = df_tren[df_tren['Provinsi'] == provinsi].iloc[0]
+                    ax.plot(['2019', '2020', '2021', '2022', '2023', '2024'], 
+                           [row['2019'], row['2020'], row['2021'], row['2022'], row['2023'], row['2024']], 
+                           marker='o', label=provinsi)
                 
-                with col2:
-                    st.markdown("**Tren Lulusan (2020-2025)**")
-                    plt_obj = visualisasi['6_Tren_APS_16-18']()
-                    st.pyplot(plt_obj)
-                
-                with col3:
-                    st.markdown("**Tren Gap Peserta-Lulusan (2020-2025)**")
-                    plt_obj = visualisasi['7_Tren_APS_19-23']()
-                    st.pyplot(plt_obj)
+                ax.set_xlabel('Tahun')
+                ax.set_ylabel('IPTIK Index')
+                ax.set_title('Tren IPTIK per Provinsi (Top 10, 2019-2024)')
+                ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=8)
+                ax.grid(True, alpha=0.3)
+                plt.tight_layout()
+                st.pyplot(fig)
                 
                 st.info("""
                 **Insight dari tren:**
-                - Garis menunjukkan pergerakan peserta/lulusan per provinsi
-                - Slope positif = peningkatan jumlah
-                - Slope negatif = penurunan jumlah
+                - Garis menunjukkan pergerakan IPTIK per provinsi tahun 2019-2024
+                - Slope positif = peningkatan IPTIK
+                - Slope negatif = penurunan IPTIK
                 """)
             
             # TAB 4: Korelasi
             with tab4:
-                st.markdown("#### Heatmap Korelasi IPTIK vs Peserta/Lulusan")
+                st.markdown("#### Heatmap Korelasi IPTIK vs APS")
                 
-                plt_obj = visualisasi['8_Correlation_Heatmap']()
-                st.pyplot(plt_obj)
+                fig, ax = plt.subplots(figsize=(10, 6))
+                sns.heatmap(corr_matrix, annot=True, fmt='.3f', cmap='coolwarm', center=0, 
+                           ax=ax, cbar_kws={'label': 'Correlation'})
+                ax.set_title('Correlation Matrix: IPTIK vs APS Metrics')
+                plt.tight_layout()
+                st.pyplot(fig)
                 
                 st.info("""
                 **Interpretasi Heatmap:**
-                - **Korelasi Positif** (warna merah): Peningkatan satu metrik → peningkatan metrik lain
-                - **Korelasi Negatif** (warna biru): Peningkatan satu metrik → penurunan metrik lain
+                - **Nilai Positif** (warna merah): Korelasi positif - saat satu naik, yang lain cenderung naik
+                - **Nilai Negatif** (warna biru): Korelasi negatif - saat satu naik, yang lain cenderung turun
                 - **Nilai 0** (warna putih): Tidak ada korelasi linear
+                
+                **Kolom APS:**
+                - **APS_avg_age_13-15**: Peserta pada usia 13-15 tahun (SMP)
+                - **APS_avg_age_16-18**: Peserta pada usia 16-18 tahun (SMA)
+                - **APS_avg_age_19-23**: Peserta pada usia 19-23 tahun (Pasca SMA)
                 """)
                 
                 # Detail korelasi
@@ -380,35 +410,76 @@ def main():
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.markdown("**IPTIK Average vs Peserta/Lulusan Metrics:**")
-                    corr_detail = corr_matrix.loc['IPTIK_avg', ['Peserta_avg', 'Lulusan_avg', 'Gap_avg']]
+                    st.markdown("**IPTIK Average vs APS Metrics:**")
+                    corr_detail = corr_matrix.loc['IPTIK_avg', ['APS_avg_age_13-15', 'APS_avg_age_16-18', 'APS_avg_age_19-23']]
                     st.dataframe(corr_detail.to_frame(name='Correlation'))
                 
                 with col2:
-                    st.markdown("**IPTIK Year-by-Year vs Gap:**")
-                    corr_yearly = corr_matrix.loc[['IPTIK_2019', 'IPTIK_2020', 'IPTIK_2021', 'IPTIK_2022', 'IPTIK_2023', 'IPTIK_2024'], 'Gap_avg']
-                    st.dataframe(corr_yearly.to_frame(name='Correlation with Gap'))
+                    st.markdown("**IPTIK Year-by-Year vs APS (16-18):**")
+                    corr_yearly = corr_matrix.loc[['IPTIK_2019', 'IPTIK_2020', 'IPTIK_2021', 'IPTIK_2022', 'IPTIK_2023', 'IPTIK_2024'], 'APS_avg_age_16-18']
+                    st.dataframe(corr_yearly.to_frame(name='Correlation with APS (16-18)'))
             
             # TAB 5: Scatter Analysis
             with tab5:
-                st.markdown("#### Scatter Plot: IPTIK Average vs Peserta/Lulusan")
+                st.markdown("#### Scatter Plot: IPTIK Average vs APS Metrics")
                 
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
-                    st.markdown("**IPTIK vs Peserta**")
-                    plt_obj = visualisasi['9_Scatter_IPTIK_vs_APS_13-15']()
-                    st.pyplot(plt_obj)
+                    st.markdown("**IPTIK vs APS (Age 13-15)**")
+                    # Create scatter plot
+                    df_scatter = corr_matrix[['IPTIK_avg', 'APS_avg_age_13-15']].reset_index()
+                    if df_scatter.shape[0] > 0:
+                        fig, ax = plt.subplots(figsize=(6, 5))
+                        ax.scatter(df_scatter['IPTIK_avg'], df_scatter['APS_avg_age_13-15'], alpha=0.6, s=100)
+                        # Add trend line
+                        z = np.polyfit(df_scatter['IPTIK_avg'].dropna(), df_scatter['APS_avg_age_13-15'].dropna(), 1)
+                        p = np.poly1d(z)
+                        x_line = np.linspace(df_scatter['IPTIK_avg'].min(), df_scatter['IPTIK_avg'].max(), 100)
+                        ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
+                        ax.set_xlabel('IPTIK Average')
+                        ax.set_ylabel('APS Average (13-15)')
+                        ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_13-15']:.3f}")
+                        ax.legend()
+                        ax.grid(True, alpha=0.3)
+                        plt.tight_layout()
+                        st.pyplot(fig)
                 
                 with col2:
-                    st.markdown("**IPTIK vs Lulusan**")
-                    plt_obj = visualisasi['10_Scatter_IPTIK_vs_APS_16-18']()
-                    st.pyplot(plt_obj)
+                    st.markdown("**IPTIK vs APS (Age 16-18)**")
+                    df_scatter = corr_matrix[['IPTIK_avg', 'APS_avg_age_16-18']].reset_index()
+                    if df_scatter.shape[0] > 0:
+                        fig, ax = plt.subplots(figsize=(6, 5))
+                        ax.scatter(df_scatter['IPTIK_avg'], df_scatter['APS_avg_age_16-18'], alpha=0.6, s=100, color='coral')
+                        z = np.polyfit(df_scatter['IPTIK_avg'].dropna(), df_scatter['APS_avg_age_16-18'].dropna(), 1)
+                        p = np.poly1d(z)
+                        x_line = np.linspace(df_scatter['IPTIK_avg'].min(), df_scatter['IPTIK_avg'].max(), 100)
+                        ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
+                        ax.set_xlabel('IPTIK Average')
+                        ax.set_ylabel('APS Average (16-18)')
+                        ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_16-18']:.3f}")
+                        ax.legend()
+                        ax.grid(True, alpha=0.3)
+                        plt.tight_layout()
+                        st.pyplot(fig)
                 
                 with col3:
-                    st.markdown("**IPTIK vs Gap**")
-                    plt_obj = visualisasi['11_Scatter_IPTIK_vs_APS_19-23']()
-                    st.pyplot(plt_obj)
+                    st.markdown("**IPTIK vs APS (Age 19-23)**")
+                    df_scatter = corr_matrix[['IPTIK_avg', 'APS_avg_age_19-23']].reset_index()
+                    if df_scatter.shape[0] > 0:
+                        fig, ax = plt.subplots(figsize=(6, 5))
+                        ax.scatter(df_scatter['IPTIK_avg'], df_scatter['APS_avg_age_19-23'], alpha=0.6, s=100, color='green')
+                        z = np.polyfit(df_scatter['IPTIK_avg'].dropna(), df_scatter['APS_avg_age_19-23'].dropna(), 1)
+                        p = np.poly1d(z)
+                        x_line = np.linspace(df_scatter['IPTIK_avg'].min(), df_scatter['IPTIK_avg'].max(), 100)
+                        ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
+                        ax.set_xlabel('IPTIK Average')
+                        ax.set_ylabel('APS Average (19-23)')
+                        ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_19-23']:.3f}")
+                        ax.legend()
+                        ax.grid(True, alpha=0.3)
+                        plt.tight_layout()
+                        st.pyplot(fig)
                 
                 st.info("""
                 **Interpretasi Scatter Plot:**
@@ -420,7 +491,7 @@ def main():
         
         except Exception as e:
             st.error(f"❌ Terjadi error saat memuat data: {str(e)}")
-            st.info("Pastikan `pertanyaan_dua/Untitled3.ipynb` sudah ada dan sudah dijalankan sepenuhnya.")
+            st.info("Pastikan `pertanyaan_dua/Hasil_Analisis_Pertanyaan_Bisnis_Kedua.ipynb` sudah ada dan sudah dijalankan sepenuhnya.")
     
     # Footer
     st.markdown("""
