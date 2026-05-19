@@ -214,13 +214,13 @@ def load_pertanyaan_satu_from_notebook(notebook_path):
 
 def load_pertanyaan_dua_from_notebook(notebook_path):
     """
-    Load data dari Untitled3.ipynb untuk pertanyaan dua.
+    Load data dari Hasil_Analisis_Pertanyaan_Bisnis_Kedua.ipynb untuk pertanyaan dua.
     
     Args:
-        notebook_path (str): Path ke Untitled3.ipynb
+        notebook_path (str): Path ke notebook file
         
     Returns:
-        dict: Berisi data dan visualisasi functions
+        dict: Berisi dataframes dan correlation matrix
     """
     # Determine data directory
     notebook_dir = os.path.dirname(os.path.abspath(notebook_path))
@@ -229,20 +229,21 @@ def load_pertanyaan_dua_from_notebook(notebook_path):
     # Execute notebook
     exec_globals = execute_notebook(notebook_path, data_dir)
     
-    # Extract data yang penting
+    # Extract main dataframes
     df_iptik = exec_globals.get('df_iptik_merged')
     df_aps = exec_globals.get('df_aps_merged')
     corr_matrix = exec_globals.get('corr_matrix')
     
+    # Extract merged dataframe with both IPTIK and APS for each province (for scatter plots)
+    df_corr = exec_globals.get('df_corr')
+    
     if df_iptik is None or df_aps is None or corr_matrix is None:
         raise ValueError("❌ df_iptik, df_aps, atau corr_matrix tidak ditemukan di notebook.")
-    
-    # TODO: Tambah visualisasi functions untuk pertanyaan dua jika diperlukan
-    # Untuk sekarang return data saja
     
     return {
         'df_iptik': df_iptik,
         'df_aps': df_aps,
         'corr_matrix': corr_matrix,
+        'df_corr': df_corr,  # Merged data for scatter plots
         'visualisasi': {}
     }

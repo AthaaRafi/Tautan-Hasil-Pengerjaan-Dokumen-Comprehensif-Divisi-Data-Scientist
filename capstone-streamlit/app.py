@@ -239,6 +239,7 @@ def main():
             df_iptik = result_q2['df_iptik']
             df_aps = result_q2['df_aps']
             corr_matrix = result_q2['corr_matrix']
+            df_corr = result_q2.get('df_corr')  # Merged data with both IPTIK and APS
             visualisasi = result_q2['visualisasi']
             
             # Tabs untuk pilih tampilan
@@ -423,63 +424,70 @@ def main():
             with tab5:
                 st.markdown("#### Scatter Plot: IPTIK Average vs APS Metrics")
                 
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    st.markdown("**IPTIK vs APS (Age 13-15)**")
-                    # Create scatter plot
-                    df_scatter = corr_matrix[['IPTIK_avg', 'APS_avg_age_13-15']].reset_index()
-                    if df_scatter.shape[0] > 0:
-                        fig, ax = plt.subplots(figsize=(6, 5))
-                        ax.scatter(df_scatter['IPTIK_avg'], df_scatter['APS_avg_age_13-15'], alpha=0.6, s=100)
-                        # Add trend line
-                        z = np.polyfit(df_scatter['IPTIK_avg'].dropna(), df_scatter['APS_avg_age_13-15'].dropna(), 1)
-                        p = np.poly1d(z)
-                        x_line = np.linspace(df_scatter['IPTIK_avg'].min(), df_scatter['IPTIK_avg'].max(), 100)
-                        ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
-                        ax.set_xlabel('IPTIK Average')
-                        ax.set_ylabel('APS Average (13-15)')
-                        ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_13-15']:.3f}")
-                        ax.legend()
-                        ax.grid(True, alpha=0.3)
-                        plt.tight_layout()
-                        st.pyplot(fig)
-                
-                with col2:
-                    st.markdown("**IPTIK vs APS (Age 16-18)**")
-                    df_scatter = corr_matrix[['IPTIK_avg', 'APS_avg_age_16-18']].reset_index()
-                    if df_scatter.shape[0] > 0:
-                        fig, ax = plt.subplots(figsize=(6, 5))
-                        ax.scatter(df_scatter['IPTIK_avg'], df_scatter['APS_avg_age_16-18'], alpha=0.6, s=100, color='coral')
-                        z = np.polyfit(df_scatter['IPTIK_avg'].dropna(), df_scatter['APS_avg_age_16-18'].dropna(), 1)
-                        p = np.poly1d(z)
-                        x_line = np.linspace(df_scatter['IPTIK_avg'].min(), df_scatter['IPTIK_avg'].max(), 100)
-                        ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
-                        ax.set_xlabel('IPTIK Average')
-                        ax.set_ylabel('APS Average (16-18)')
-                        ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_16-18']:.3f}")
-                        ax.legend()
-                        ax.grid(True, alpha=0.3)
-                        plt.tight_layout()
-                        st.pyplot(fig)
-                
-                with col3:
-                    st.markdown("**IPTIK vs APS (Age 19-23)**")
-                    df_scatter = corr_matrix[['IPTIK_avg', 'APS_avg_age_19-23']].reset_index()
-                    if df_scatter.shape[0] > 0:
-                        fig, ax = plt.subplots(figsize=(6, 5))
-                        ax.scatter(df_scatter['IPTIK_avg'], df_scatter['APS_avg_age_19-23'], alpha=0.6, s=100, color='green')
-                        z = np.polyfit(df_scatter['IPTIK_avg'].dropna(), df_scatter['APS_avg_age_19-23'].dropna(), 1)
-                        p = np.poly1d(z)
-                        x_line = np.linspace(df_scatter['IPTIK_avg'].min(), df_scatter['IPTIK_avg'].max(), 100)
-                        ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
-                        ax.set_xlabel('IPTIK Average')
-                        ax.set_ylabel('APS Average (19-23)')
-                        ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_19-23']:.3f}")
-                        ax.legend()
-                        ax.grid(True, alpha=0.3)
-                        plt.tight_layout()
-                        st.pyplot(fig)
+                if df_corr is not None:
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        st.markdown("**IPTIK vs APS (Age 13-15)**")
+                        if 'IPTIK_avg' in df_corr.columns and 'APS_avg_age_13-15' in df_corr.columns:
+                            fig, ax = plt.subplots(figsize=(6, 5))
+                            x_data = df_corr['IPTIK_avg'].dropna()
+                            y_data = df_corr['APS_avg_age_13-15'].dropna()
+                            ax.scatter(x_data, y_data, alpha=0.6, s=100)
+                            if len(x_data) > 1 and len(y_data) > 1:
+                                z = np.polyfit(x_data, y_data, 1)
+                                p = np.poly1d(z)
+                                x_line = np.linspace(x_data.min(), x_data.max(), 100)
+                                ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
+                            ax.set_xlabel('IPTIK Average')
+                            ax.set_ylabel('APS Average (13-15)')
+                            ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_13-15']:.3f}")
+                            ax.legend()
+                            ax.grid(True, alpha=0.3)
+                            plt.tight_layout()
+                            st.pyplot(fig)
+                    
+                    with col2:
+                        st.markdown("**IPTIK vs APS (Age 16-18)**")
+                        if 'IPTIK_avg' in df_corr.columns and 'APS_avg_age_16-18' in df_corr.columns:
+                            fig, ax = plt.subplots(figsize=(6, 5))
+                            x_data = df_corr['IPTIK_avg'].dropna()
+                            y_data = df_corr['APS_avg_age_16-18'].dropna()
+                            ax.scatter(x_data, y_data, alpha=0.6, s=100, color='coral')
+                            if len(x_data) > 1 and len(y_data) > 1:
+                                z = np.polyfit(x_data, y_data, 1)
+                                p = np.poly1d(z)
+                                x_line = np.linspace(x_data.min(), x_data.max(), 100)
+                                ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
+                            ax.set_xlabel('IPTIK Average')
+                            ax.set_ylabel('APS Average (16-18)')
+                            ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_16-18']:.3f}")
+                            ax.legend()
+                            ax.grid(True, alpha=0.3)
+                            plt.tight_layout()
+                            st.pyplot(fig)
+                    
+                    with col3:
+                        st.markdown("**IPTIK vs APS (Age 19-23)**")
+                        if 'IPTIK_avg' in df_corr.columns and 'APS_avg_age_19-23' in df_corr.columns:
+                            fig, ax = plt.subplots(figsize=(6, 5))
+                            x_data = df_corr['IPTIK_avg'].dropna()
+                            y_data = df_corr['APS_avg_age_19-23'].dropna()
+                            ax.scatter(x_data, y_data, alpha=0.6, s=100, color='green')
+                            if len(x_data) > 1 and len(y_data) > 1:
+                                z = np.polyfit(x_data, y_data, 1)
+                                p = np.poly1d(z)
+                                x_line = np.linspace(x_data.min(), x_data.max(), 100)
+                                ax.plot(x_line, p(x_line), "r--", alpha=0.8, label='Trend')
+                            ax.set_xlabel('IPTIK Average')
+                            ax.set_ylabel('APS Average (19-23)')
+                            ax.set_title(f"Correlation: {corr_matrix.loc['IPTIK_avg', 'APS_avg_age_19-23']:.3f}")
+                            ax.legend()
+                            ax.grid(True, alpha=0.3)
+                            plt.tight_layout()
+                            st.pyplot(fig)
+                else:
+                    st.warning("Data merged untuk scatter plot tidak tersedia")
                 
                 st.info("""
                 **Interpretasi Scatter Plot:**
