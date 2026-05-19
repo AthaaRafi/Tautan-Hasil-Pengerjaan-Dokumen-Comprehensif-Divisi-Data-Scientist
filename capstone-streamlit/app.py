@@ -217,19 +217,19 @@ def main():
     # ========================================================================
     
     elif pertanyaan == "Korelasi IPTI vs APS":
-        st.markdown('<h2 class="sub-header">Korelasi IPTIK dengan Peserta dan Lulusan SMA (2020-2025)</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 class="sub-header">Korelasi IPTIK dengan APS - Angka Partisipasi Sekolah (2020-2025)</h2>', unsafe_allow_html=True)
         
         # Deskripsi
         st.write("""
         **Tujuan Analisis:**
         > Menjawab pertanyaan: *"Bagaimana korelasi antara Indeks Pembangunan Teknologi Informasi (IPTIK) 
-        suatu provinsi dengan data peserta dan lulusan SMA dari tahun 2020 - 2025?"*
+        suatu provinsi dengan Angka Partisipasi Sekolah (APS) berdasarkan kelompok umur dari tahun 2020 - 2025?"*
         
         **Metodologi:**
-        1. Merge 3 dataset IPTIK (2019-2024) menjadi 6 tahun continuous
-        2. Merge 6 dataset peserta/lulusan per tahun (2020-2025)
-        3. Hitung rata-rata IPTIK, peserta, lulusan, dan gap peserta-lulusan
-        4. Analisis korelasi menggunakan Pearson correlation
+        1. Merge 3 dataset IPTIK (2019-2024) menjadi data kontinyu
+        2. Merge 6 dataset APS per tahun (2020-2025) berdasarkan kelompok umur: 13-15 (SMP), 16-18 (SMA), 19-23 (Pasca SMA)
+        3. Hitung rata-rata IPTIK dan APS untuk setiap kelompok umur
+        4. Analisis korelasi menggunakan Pearson correlation antara IPTIK dan APS
         5. Visualisasi: bar charts, line plots, heatmap, scatter plots
         """)
         
@@ -267,7 +267,7 @@ def main():
                 with col2:
                     st.markdown("""
                     <div class="metric-box">
-                    <b>Jumlah Provinsi (Peserta/Lulusan)</b><br>
+                    <b>Jumlah Provinsi (APS - Kelompok Umur)</b><br>
                     {0}
                     </div>
                     """.format(len(df_aps)), unsafe_allow_html=True)
@@ -285,8 +285,8 @@ def main():
                 df_iptik_display.index.name = 'Ranking'
                 st.dataframe(df_iptik_display.head(10), use_container_width=True)
                 
-                # Top 10 Peserta/Lulusan
-                st.markdown("#### Ranking Provinsi Peserta/Lulusan (2025)")
+                # Top 10 APS Tertinggi
+                st.markdown("#### Ranking Provinsi berdasarkan APS Rata-Rata (2025)")
                 df_aps_display = df_aps.copy().reset_index()
                 # Filter Indonesia/agregasi yang mungkin masih ada
                 provinsi_filter = ['INDONESIA', '38 PROVINSI', 'TOTAL', 'JUMLAH', 'LUAR NEGERI']
