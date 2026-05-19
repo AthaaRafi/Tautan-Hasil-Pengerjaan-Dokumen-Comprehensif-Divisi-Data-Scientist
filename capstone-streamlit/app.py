@@ -201,6 +201,36 @@ def main():
                 st.markdown("#### Scatter Analysis After Feature Engineering")
                 plt_obj = visualisasi['9_Scatter_After_FE']()
                 st.pyplot(plt_obj)
+            
+            # KESIMPULAN PERTANYAAN SATU
+            st.markdown("---")
+            st.markdown("#### 📋 Kesimpulan & Penjelasan Hasil Analisis")
+            
+            st.write("""
+            **Jawaban Pertanyaan Bisnis:**
+            
+            Berdasarkan analisis data per provinsi dengan kombinasi Feature Engineering, organisasi dapat mengestimasi potensi 
+            pelajar yang dapat dijangkau dalam 3-6 bulan. Estimasi ini dibentuk dari jumlah pelajar aktif dan skor jangkauan digital 
+            (yang mencakup kepemilikan telepon seluler, akses internet jenjang SMA, dan rasio ketersediaan sinyal).
+            
+            **Hasil Prioritas Teratas (Top 3 Provinsi):**
+            1. **DKI Jakarta**: Estimasi pelajar terjangkau = 186.451
+            2. **Kalimantan Timur**: Estimasi pelajar terjangkau = 73.177
+            3. **Sulawesi Utara**: Estimasi pelajar terjangkau = 51.825
+            
+            **Total** estimasi pelajar dari 3 provinsi teratas = **311.453 pelajar**
+            
+            **Penjelasan Visualisasi:**
+            - **Data Summary Tab**: Menampilkan statistik dasar meliputi jumlah provinsi, rentang estimasi pelajar, dan distribusi data
+            - **Before vs After FE Tab**: Membandingkan hasil sebelum dan sesudah Feature Engineering untuk menunjukkan dampak transformasi data
+            - **Heatmap Tab**: Visualisasi korelasi antar indikator untuk memahami hubungan variabel yang mempengaruhi estimasi
+            - **Scatter Analysis Tab**: Menunjukkan hubungan linear antara pelajar aktif dan estimasi pelajar terjangkau
+            
+            **Rekomendasi:**
+            Organisasi dapat menyusun prioritas wilayah akuisisi pelajar secara terarah dengan pendekatan berbasis data. 
+            Namun, untuk keputusan implementasi intervensi secara penuh, pengujian lanjutan tetap disarankan agar dampak program 
+            dapat divalidasi lebih kuat.
+            """)
         
         except Exception as e:
             st.error(f"❌ Terjadi error saat memuat data: {str(e)}")
@@ -541,6 +571,55 @@ def main():
                 - Slope positif = korelasi positif
                 - Kumpul di sekitar garis = korelasi kuat
                 """)
+            
+            # KESIMPULAN PERTANYAAN DUA
+            st.markdown("---")
+            st.markdown("#### 📋 Kesimpulan & Penjelasan Hasil Analisis")
+            
+            st.write("""
+            **Jawaban Pertanyaan Bisnis:**
+            
+            Analisis korelasi antara IPTIK dan APS menunjukkan hasil yang menarik terkait pengaruh pembangunan infrastruktur 
+            digital terhadap partisipasi pendidikan berdasarkan kelompok usia.
+            
+            **Temuan Utama:**
+            
+            **1. Data IPTIK (Trend 2019-2024):** ✅ Sehat
+            - Indikator Cohen's d menurun konsisten setiap tahun, menunjukkan kesenjangan pembangunan TIK antar wilayah 
+              semakin mengecil
+            - P-Value < 0.05, menunjukkan perubahan signifikan secara statistik
+            - Kesenjangan pembangunan TIK di wilayah terbelakang terus meningkat
+            
+            **2. APS Kelompok Usia 13-15 Tahun (SMP):** 🔴 Signifikan
+            - Ada 2 hasil uji yang signifikan dengan P-Value < 0.05
+            - Pembangunan IPTIK di provinsi teratas vs terbawah memiliki **korelasi dan pengaruh nyata** 
+              terhadap partisipasi anak usia 13-15 tahun
+            - Kesenjangan akses digital masih menjadi hambatan utama di usia ini
+            
+            **3. APS Kelompok Usia 16-18 Tahun (SMA) & 19-23 Tahun (Pasca SMA):** ⚪ Tidak Signifikan
+            - Mayoritas hasil menunjukkan P-Value > 0.05 (tidak signifikan)
+            - Pembangunan IPTIK sudah cukup memadai di semua wilayah untuk kelompok usia ini
+            - Faktor keterbatasan akses digital **bukan lagi masalah utama** pada rentang usia ini
+            
+            **Penjelasan Visualisasi:**
+            - **Tab Data Summary**: Menampilkan ringkasan statistik IPTIK dan APS untuk 33 provinsi
+            - **Tab Top 10 Rankings**: Menunjukkan provinsi dengan IPTIK dan APS tertinggi
+            - **Tab Tren Waktu**: Menelusuri perkembangan IPTIK dari 2019-2024 untuk top 10 provinsi
+            - **Tab Korelasi**: Heatmap menunjukkan hubungan antar variabel dengan nilai korelasi Pearson
+            - **Tab Scatter Analysis**: Visualisasi hubungan IPTIK vs APS untuk setiap kelompok usia
+            
+            **Rekomendasi Strategis:**
+            
+            Untuk anak usia **19-23 tahun**, keterbatasan bukan pada akses digital tetapi pada:
+            - **Mindset dan motivasi** untuk melanjutkan pendidikan
+            - **Kapasitas finansial** untuk mendukung studi
+            - **Transparansi informasi beasiswa** yang memadai dan mudah diakses
+            - **Pengaruh lingkungan sosial** (peer group) yang dapat membuka akses informasi beasiswa sesuai 
+              minat dan prestasi siswa
+            
+            Fokus intervensi harus bergeser dari peningkatan infrastruktur digital menuju program 
+            motivasi, dukungan finansial, dan akses informasi beasiswa yang lebih baik.
+            """)
         
         except Exception as e:
             st.error(f"❌ Terjadi error saat memuat data: {str(e)}")
