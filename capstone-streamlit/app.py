@@ -80,11 +80,11 @@ def load_pertanyaan_satu():
 
 @st.cache_resource
 def load_pertanyaan_dua():
-    """Load dan cache hasil analisis pertanyaan 2 dari Untitled3.ipynb."""
+    """Load dan cache hasil analisis pertanyaan 2 dari Hasil_Analisis_Pertanyaan_Bisnis_Kedua.ipynb."""
     # Tentukan path ke notebook dari lokasi script ini
     app_dir = Path(__file__).parent
     root_dir = app_dir.parent
-    notebook_path = root_dir / "pertanyaan_dua" / "Untitled3.ipynb"
+    notebook_path = root_dir / "pertanyaan_dua" / "Hasil_Analisis_Pertanyaan_Bisnis_Kedua.ipynb"
     
     st.write(f"DEBUG: Resolved notebook path: {notebook_path}")
     st.write(f"DEBUG: Path exists: {notebook_path.exists()}")

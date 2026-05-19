@@ -31,12 +31,24 @@ def execute_notebook(notebook_path, data_dir):
         nb = nbformat.read(f, as_version=4)
     
     # Setup execution environment dengan data_dir sebagai working directory
+    # Add display function (Jupyter built-in) yang tidak tersedia di exec()
+    def display(*args, **kwargs):
+        """Dummy display function untuk kompatibilitas Jupyter cells."""
+        pass
+    
+    # Add IPython utilities
+    class HTML:
+        def __init__(self, data):
+            self.data = data
+    
     exec_globals = {
         'pd': pd,
         'np': np,
         'plt': plt,
         'sns': sns,
         '__file__': notebook_path,
+        'display': display,
+        'HTML': HTML,
     }
     
     # Change working directory untuk notebook execution
@@ -50,10 +62,11 @@ def execute_notebook(notebook_path, data_dir):
         for idx, cell in enumerate(nb.cells):
             if cell.cell_type == 'code':
                 try:
+                    # Execute cell source directly (files now have correct names)
                     exec(cell.source, exec_globals)
                 except Exception as e:
                     # Print full error untuk debugging
-                    print(f"⚠️ Cell {idx} error: {str(e)}")
+                    print(f"[ERROR] Cell {idx} error: {str(e)}")
                     import traceback
                     traceback.print_exc()
                     continue
