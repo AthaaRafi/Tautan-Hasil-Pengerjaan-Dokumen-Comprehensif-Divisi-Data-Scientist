@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+.venv/
+latihan_belajar_capstone.ipynb
